@@ -5,7 +5,7 @@ import time
 VILLAGE_API = "https://api-server-u2blzhjdqa-uc.a.run.app"
 USER_NETWORK = "<ENTER_YOUR_NETWORK>"
 BEARER_TOKEN = "<ENTER_YOUR_GENERATED_API_KEY>"
-# SALES_INCENTIVE_CLASS = "<ENTER_YOUR_SALES_INCENTIVE>"
+# SALES_INCENTIVE_CLASS = "<ENTER_YOUR_SALES_INCENTIVE>"    # Optional, only required if your network has more than 1 sales incentive class.
 BATCH_SIZE = 3
 
 def post_transaction(batch):
