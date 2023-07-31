@@ -1,51 +1,49 @@
-import csv
 import requests
-import time
+import csv
 
-VILLAGE_API = "https://api-server-u2blzhjdqa-uc.a.run.app"
-USER_NETWORK = "<ENTER_YOUR_NETWORK>"
-BEARER_TOKEN = "<ENTER_YOUR_GENERATED_API_KEY>"
-# SALES_INCENTIVE_CLASS = "<ENTER_YOUR_SALES_INCENTIVE>"    # Optional, only required if your network has more than 1 sales incentive class.
-BATCH_SIZE = 3
+VILLAGE_API = "https://api-ledger.villagelabs.net"
+USER_NETWORK = "<NETWORK ID PASTED HERE>"
+BEARER_TOKEN = "<API KEY PASTED HERE>"
+FILE_NAME = "<CSV FILE NAME HERE>"
 
-def post_transaction(batch):
-    url = f"{VILLAGE_API}/networks/{USER_NETWORK}/transactions"
+
+def post_activity(body):
+    url = f"{VILLAGE_API}/networks/{USER_NETWORK}/activity"
     headers = {"Authorization": "Bearer " + BEARER_TOKEN}
-    response = requests.post(url, headers=headers, json=batch)
+    response = requests.post(url, headers=headers, json=body)
     return response
 
-with open("transactions.csv") as f:
-    reader = csv.DictReader(f)
-    rows = list(reader)
-    total_rows = len(rows)
-    batch = []
-    for i, row in enumerate(rows):
-        print("Reading row %d/%d" % (i + 1, total_rows))
-        buyer = row["buyer"]
-        seller = row["seller"]
-        amount = float(row["amount"])
-        denom = row["denom"]
-        ref = row["ref"]
-        productClass = SALES_INCENTIVE_CLASS
-        ts = int(row["ts"])
+
+with open(FILE_NAME, newline='') as csvfile:
+    csvreader = csv.DictReader(csvfile)
+
+    for i, row in enumerate(csvreader, 1):
+        print(f"Reading row {i}/{csvreader.line_num}")
+
+        usersKey = row["user_1_key"]
+        userEmail = row["user_1_email"]
+        amount = str(row["amount"])  # Must be string
+        activityID = row["activity_short_id"]
+        timestamp = int(row["activity_timestamp"])
         description = row["description"]
+        reference = row["reference"]
         allowUnknown = True
-        batch.append({"buyer": buyer, "seller": seller, "amount": amount, "denom": denom, "ref": ref, "ts": ts, "description": description, "allowUnknown": allowUnknown})
-        if len(batch) >= BATCH_SIZE or i == total_rows - 1:
-            print("Submitting batch of " + str(len(batch))+  "...")
-            response = post_transaction(batch)
-            if response.status_code == 200:
-                print(f"Transaction executed successfully: {ref}")
-            else:
-                print(f"Transaction executed failed for {ref}: {response.json()}")
-            
-            if i < total_rows - 1:
-                print("Waiting for next block...")
-                batch.clear()
-                time.sleep(5)
-            else:
-                print("Done!")
-        
-        
-            
-    
+        message = {
+            "activity_short_id": activityID,
+            "amount": amount,
+            "users": {
+                usersKey: userEmail,
+            },
+            "metadata": {
+                "description": description,
+                "activity_timestamp": timestamp,
+                "reference": reference,
+            },
+        }
+
+        response = post_activity(message)
+        if response.status_code == 200:
+            print(f"Transaction executed successfully: {reference}")
+        else:
+            print(
+                f"Transaction executed failed for {reference}: {response.json()}")
